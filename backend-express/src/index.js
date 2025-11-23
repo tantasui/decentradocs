@@ -36,6 +36,7 @@ app.use('/', routes);
 app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
+    detail: `Route ${req.method} ${req.path} not found`,
     message: `Route ${req.method} ${req.path} not found`,
   });
 });
@@ -43,9 +44,11 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
+  const errorMessage = config.debug ? err.message : 'An unexpected error occurred';
   res.status(500).json({
     error: 'Internal Server Error',
-    message: config.debug ? err.message : 'An unexpected error occurred',
+    detail: errorMessage,
+    message: errorMessage,
   });
 });
 

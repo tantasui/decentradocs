@@ -73,6 +73,7 @@ router.post('/upload-document', upload.single('file'), async (req, res) => {
     if (!file) {
       return res.status(400).json({
         error: 'No file provided',
+        detail: 'Please upload a file',
         message: 'Please upload a file',
       });
     }
@@ -80,6 +81,7 @@ router.post('/upload-document', upload.single('file'), async (req, res) => {
     if (!walletAddress) {
       return res.status(400).json({
         error: 'No wallet address provided',
+        detail: 'Please provide a wallet address',
         message: 'Please provide a wallet address',
       });
     }
@@ -134,6 +136,7 @@ router.post('/upload-document', upload.single('file'), async (req, res) => {
     console.error('Upload error:', error);
     res.status(500).json({
       error: 'Upload failed',
+      detail: error.message,
       message: error.message,
     });
   }
@@ -155,6 +158,7 @@ router.post('/complete-upload', upload.none(), async (req, res) => {
     if (!blobId) {
       return res.status(400).json({
         error: 'Missing blob_id',
+        detail: 'Please provide the blob_id',
         message: 'Please provide the blob_id',
       });
     }
@@ -173,6 +177,7 @@ router.post('/complete-upload', upload.none(), async (req, res) => {
     console.error('Complete upload error:', error);
     res.status(500).json({
       error: 'Failed to complete upload',
+      detail: error.message,
       message: error.message,
     });
   }
@@ -205,12 +210,14 @@ router.get('/download/:blobId', async (req, res) => {
     if (error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Document not found',
+        detail: error.message,
         message: error.message,
       });
     }
 
     res.status(500).json({
       error: 'Download failed',
+      detail: error.message,
       message: error.message,
     });
   }
@@ -266,6 +273,7 @@ router.delete('/documents/:blobId', async (req, res) => {
     console.error('Delete error:', error);
     res.status(500).json({
       error: 'Delete failed',
+      detail: error.message,
       message: error.message,
     });
   }
@@ -289,6 +297,7 @@ router.get('/stats/:blobId', async (req, res) => {
     console.error('Stats error:', error);
     res.status(500).json({
       error: 'Failed to get stats',
+      detail: error.message,
       message: error.message,
     });
   }
@@ -312,6 +321,7 @@ router.post('/query', async (req, res) => {
     if (!question) {
       return res.status(400).json({
         error: 'No question provided',
+        detail: 'Please provide a question',
         message: 'Please provide a question',
       });
     }
@@ -319,6 +329,7 @@ router.post('/query', async (req, res) => {
     if (!ragService.isAvailable()) {
       return res.status(503).json({
         error: 'RAG service unavailable',
+        detail: 'The AI query service is not configured. Please set OPENAI_API_KEY.',
         message: 'The AI query service is not configured. Please set OPENAI_API_KEY.',
       });
     }
@@ -336,6 +347,7 @@ router.post('/query', async (req, res) => {
     console.error('Query error:', error);
     res.status(500).json({
       error: 'Query failed',
+      detail: error.message,
       message: error.message,
     });
   }
