@@ -1,13 +1,26 @@
 import os
 from typing import List, Optional, Dict
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
-from langchain.docstore.document import Document
-import PyPDF2
 from io import BytesIO
 from ..config import get_settings
+
+# Try to import LangChain components - make them optional for Vercel
+try:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+    from langchain.chains import RetrievalQA
+    from langchain.prompts import PromptTemplate
+    from langchain.docstore.document import Document
+    import PyPDF2
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+    RecursiveCharacterTextSplitter = None
+    OpenAIEmbeddings = None
+    ChatOpenAI = None
+    RetrievalQA = None
+    PromptTemplate = None
+    Document = None
+    PyPDF2 = None
 
 # Try to import Chroma - make it optional for Vercel
 try:
@@ -22,6 +35,12 @@ class RAGService:
     """Service for RAG (Retrieval-Augmented Generation) operations"""
 
     def __init__(self):
+        if not LANGCHAIN_AVAILABLE:
+            raise RuntimeError(
+                "LangChain is not available. Please install langchain packages for RAG functionality. "
+                "Install with: pip install langchain langchain-openai langchain-community"
+            )
+        
         self.settings = get_settings()
         self._embeddings = None
         self._vectorstore = None

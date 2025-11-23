@@ -1,15 +1,32 @@
-from pysui import SyncClient, SuiConfig
-from pysui.sui.sui_txn import SyncTransaction
-from pysui.sui.sui_types.scalars import ObjectID, SuiString
-from pysui.sui.sui_types.address import SuiAddress
 from typing import List, Optional, Dict
 from ..config import get_settings
+
+# Try to import pysui - make it optional for Vercel
+try:
+    from pysui import SyncClient, SuiConfig
+    from pysui.sui.sui_txn import SyncTransaction
+    from pysui.sui.sui_types.scalars import ObjectID, SuiString
+    from pysui.sui.sui_types.address import SuiAddress
+    PYSUI_AVAILABLE = True
+except ImportError:
+    PYSUI_AVAILABLE = False
+    SyncClient = None
+    SuiConfig = None
+    SyncTransaction = None
+    ObjectID = None
+    SuiString = None
+    SuiAddress = None
 
 
 class SuiService:
     """Service for interacting with Sui blockchain using pysui"""
 
     def __init__(self):
+        if not PYSUI_AVAILABLE:
+            raise RuntimeError(
+                "pysui is not available. Please install pysui for Sui blockchain integration. "
+                "Install with: pip install pysui"
+            )
         self.settings = get_settings()
         self.package_id = self.settings.sui_package_id
         self.module_name = self.settings.sui_module_name

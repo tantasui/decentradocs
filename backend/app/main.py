@@ -40,7 +40,12 @@ app.add_middleware(
 
 # Initialize services
 walrus_service = WalrusService()
-sui_service = SuiService()
+try:
+    sui_service = SuiService()
+except Exception as e:
+    logger.warning(f"Sui service initialization failed: {e}. Sui features will be disabled.")
+    sui_service = None
+
 try:
     rag_service = RAGService()
 except Exception as e:
@@ -169,7 +174,7 @@ async def query_documents(request: QueryRequest):
 
         # If wallet address is provided, get user's documents
         document_ids = request.document_ids
-        if request.wallet_address and not document_ids:
+        if request.wallet_address and not document_ids and sui_service:
             try:
                 user_docs = sui_service.get_user_documents(request.wallet_address)
                 document_ids = [doc["walrus_blob_id"] for doc in user_docs]
@@ -204,7 +209,7 @@ async def get_user_documents(wallet_address: str):
     try:
         logger.info(f"Getting documents for wallet: {wallet_address}")
 
-        if not settings.sui_package_id:
+        if not settings.sui_package_id or not sui_service:
             return UserDocumentsResponse(
                 documents=[],
                 total=0
@@ -232,8 +237,8 @@ async def get_document(wallet_address: str, document_id: str):
         document_id: Document object ID
     """
     try:
-        if not settings.sui_package_id:
-            raise HTTPException(status_code=404, detail="Sui not configured")
+        if not settings.sui_package_id or not sui_service:
+            raise HTTPException(status_code=404, detail="Sui not configured or not available")
 
         document = sui_service.get_document(document_id)
 
