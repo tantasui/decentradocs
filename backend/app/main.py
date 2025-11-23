@@ -58,16 +58,12 @@ async def root():
     }
 
 
-@app.get("/health", response_model=HealthCheckResponse)
+@app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Simple health check endpoint for deployment verification"""
     return {
-        "status": "healthy",
-        "services": {
-            "walrus": "online",
-            "sui": "online",
-            "rag": "online"
-        }
+        "status": "ok",
+        "message": "Server is running"
     }
 
 
