@@ -2,13 +2,20 @@ import os
 from typing import List, Optional, Dict
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
 import PyPDF2
 from io import BytesIO
 from ..config import get_settings
+
+# Try to import Chroma - make it optional for Vercel
+try:
+    from langchain_community.vectorstores import Chroma
+    CHROMA_AVAILABLE = True
+except ImportError:
+    CHROMA_AVAILABLE = False
+    Chroma = None
 
 
 class RAGService:
@@ -52,8 +59,14 @@ Answer: """
             self._embeddings = OpenAIEmbeddings()
         return self._embeddings
 
-    def _get_vectorstore(self) -> Chroma:
+    def _get_vectorstore(self):
         """Lazy initialization of vectorstore"""
+        if not CHROMA_AVAILABLE:
+            raise RuntimeError(
+                "ChromaDB is not available. Please install chromadb for local development, "
+                "or use ChromaDB Cloud for production. "
+                "Install with: pip install chromadb"
+            )
         if self._vectorstore is None:
             self._vectorstore = Chroma(
                 persist_directory=self.settings.chroma_persist_directory,

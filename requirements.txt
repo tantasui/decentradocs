@@ -15,7 +15,9 @@ langchain-openai==0.0.2
 langchain-community==0.0.10
 
 # Vector Database
-chromadb==0.4.22
+# chromadb==0.4.22  # Commented out for Vercel deployment (too large)
+# Use ChromaDB Cloud or external service instead
+# For local dev, uncomment above line
 
 # OpenAI
 openai==1.6.1

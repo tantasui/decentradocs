@@ -41,7 +41,11 @@ app.add_middleware(
 # Initialize services
 walrus_service = WalrusService()
 sui_service = SuiService()
-rag_service = RAGService()
+try:
+    rag_service = RAGService()
+except Exception as e:
+    logger.warning(f"RAG service initialization failed: {e}. RAG features will be disabled.")
+    rag_service = None
 
 
 @app.get("/", response_model=HealthCheckResponse)
@@ -52,7 +56,7 @@ async def root():
         "services": {
             "walrus": "configured",
             "sui": "configured" if settings.sui_package_id else "not_configured",
-            "rag": "ready",
+            "rag": "ready" if rag_service else "not_available",
             "openai": "configured" if settings.openai_api_key else "not_configured"
         }
     }
@@ -117,23 +121,26 @@ async def upload_document(
             logger.warning("Sui package not configured, skipping NFT minting")
 
         # Step 3: Process document for RAG
-        logger.info("Processing document for RAG...")
-        try:
-            rag_result = await rag_service.process_document(
-                blob_id=blob_id,
-                content=file_content,
-                filename=file.filename,
-                metadata={
-                    "owner": wallet_address,
-                    "is_public": is_public
-                }
-            )
-            logger.info(f"RAG processing complete: {rag_result['chunks_created']} chunks created")
-        except Exception as e:
-            error_msg = str(e) if str(e) else f"{type(e).__name__}: {repr(e)}"
-            logger.error(f"RAG processing failed: {error_msg}", exc_info=True)
-            # Continue even if RAG fails - document is still uploaded to Walrus
-            logger.warning("Continuing without RAG processing due to error")
+        if rag_service:
+            logger.info("Processing document for RAG...")
+            try:
+                rag_result = await rag_service.process_document(
+                    blob_id=blob_id,
+                    content=file_content,
+                    filename=file.filename,
+                    metadata={
+                        "owner": wallet_address,
+                        "is_public": is_public
+                    }
+                )
+                logger.info(f"RAG processing complete: {rag_result['chunks_created']} chunks created")
+            except Exception as e:
+                error_msg = str(e) if str(e) else f"{type(e).__name__}: {repr(e)}"
+                logger.error(f"RAG processing failed: {error_msg}", exc_info=True)
+                # Continue even if RAG fails - document is still uploaded to Walrus
+                logger.warning("Continuing without RAG processing due to error")
+        else:
+            logger.warning("RAG service not available, skipping RAG processing")
 
         return DocumentUploadResponse(
             walrus_blob_id=blob_id,
@@ -171,6 +178,9 @@ async def query_documents(request: QueryRequest):
                 logger.warning(f"Failed to get user documents: {str(e)}")
 
         # Query RAG system
+        if not rag_service:
+            raise HTTPException(status_code=503, detail="RAG service is not available. ChromaDB is required for RAG functionality.")
+        
         result = await rag_service.query_documents(
             question=request.question,
             document_ids=document_ids
@@ -286,6 +296,9 @@ async def delete_document(blob_id: str, wallet_address: str):
     try:
         logger.info(f"Deleting document: {blob_id}")
 
+        if not rag_service:
+            raise HTTPException(status_code=503, detail="RAG service is not available. ChromaDB is required for RAG functionality.")
+
         # TODO: Verify ownership before deletion
 
         result = rag_service.delete_document_embeddings(blob_id)
@@ -341,9 +354,14 @@ async def get_document_stats(blob_id: str):
         blob_id: Walrus blob ID
     """
     try:
+        if not rag_service:
+            raise HTTPException(status_code=503, detail="RAG service is not available. ChromaDB is required for RAG functionality.")
+        
         stats = rag_service.get_document_stats(blob_id)
         return stats
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
