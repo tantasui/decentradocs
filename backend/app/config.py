@@ -24,7 +24,12 @@ class Settings(BaseSettings):
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
 
     # ChromaDB Configuration
-    chroma_persist_directory: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+    # On Vercel, use /tmp directory (only writable location in serverless)
+    # In local dev, use ./chroma_db
+    chroma_persist_directory: str = os.getenv(
+        "CHROMA_PERSIST_DIR",
+        "/tmp/chroma_db" if os.getenv("VERCEL") else "./chroma_db"
+    )
 
     # Application Configuration
     app_name: str = "Decentralized RAG System"

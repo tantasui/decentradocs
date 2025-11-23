@@ -1,0 +1,50 @@
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ChromaDB local database (should use in-memory or external service on Vercel)
+chroma_db/
+*.db
+*.sqlite3
+
+# Development files
+.env
+.env.local
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Contracts and other non-backend files
+contracts/
+frontend/
+document_registry/
+
