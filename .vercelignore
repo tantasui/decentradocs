@@ -48,3 +48,10 @@ contracts/
 frontend/
 document_registry/
 
+# Backend files that shouldn't be in function bundle
+backend/requirements.txt
+backend/run.py
+backend/.vercelignore
+backend/venv/
+backend/chroma_db/
+
