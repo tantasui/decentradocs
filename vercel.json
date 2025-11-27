@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/**": {
-      "excludeFiles": "{.next,*.cache,node_modules,public,frontend,contracts,document_registry,docs,chroma_db,venv,env,ENV,.venv,__pycache__,.git,*.md,*.log,*.db,*.sqlite3,*.egg-info,.eggs,build,dist,backend/requirements.txt.local,backend/run.py,backend/venv}/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
